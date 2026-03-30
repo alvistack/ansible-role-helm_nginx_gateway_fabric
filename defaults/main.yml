@@ -1,0 +1,52 @@
+---
+
+# Copyright 2026 Wong Hoi Sing Edison <hswong3i@pantarei-design.com>
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Release name to manage.
+helm_nginx_gateway_fabric_helm_release_name: nginx-gateway-fabric
+
+# Kubernetes namespace where the chart should be installed.
+helm_nginx_gateway_fabric_helm_release_namespace: nginx-gateway
+
+# Value to pass to chart.
+helm_nginx_gateway_fabric_helm_release_values:
+  nginxGateway:
+    kind: deployment
+    replicas: 1
+    image:
+      pullPolicy: IfNotPresent
+    snippets:
+      enable: true
+  nginx:
+    kind: deployment
+    replicas: 1
+    patches:
+      - type: StrategicMerge
+        value:
+          spec:
+            template:
+              spec:
+                hostNetwork: true
+                dnsPolicy: ClusterFirstWithHostNet
+    image:
+      pullPolicy: IfNotPresent
+    container:
+      hostPorts:
+        - port: 80
+          containerPort: 80
+        - port: 443
+          containerPort: 443
+    service:
+      type: NodePort
