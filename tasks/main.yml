@@ -60,7 +60,6 @@
     mode: "{{ item.mode | default('0755') }}"
     state: "{{ item.state | default('directory') }}"
   loop:
-    - { dest: /etc/kubernetes/crds }
     - { dest: /etc/kubernetes/charts }
   when: inventory_hostname == groups['kube_master'][0]
 
@@ -73,7 +72,6 @@
     owner: false
     group: false
   loop:
-    - { dest: /etc/kubernetes/crds/gateway-api }
     - { dest: /etc/kubernetes/charts/nginx-gateway-fabric }
   when: inventory_hostname == groups['kube_master'][0]
 
@@ -88,29 +86,6 @@
     - { dest: /etc/kubernetes/charts/nginx-gateway-fabric.values.yaml }
   when: inventory_hostname == groups['kube_master'][0]
 
-- name: kubectl apply
-  vars:
-    ansible_python_interpreter: python3
-  kubernetes.core.k8s:
-    src: "{{ item.src }}"
-    wait: true
-    state: present
-  loop:
-    - { src: /etc/kubernetes/crds/gateway-api/gateway.networking.k8s.io_gatewayclasses.yaml }
-    - { src: /etc/kubernetes/crds/gateway-api/gateway.networking.k8s.io_gateways.yaml }
-    - { src: /etc/kubernetes/crds/gateway-api/gateway.networking.k8s.io_grpcroutes.yaml }
-    - { src: /etc/kubernetes/crds/gateway-api/gateway.networking.k8s.io_httproutes.yaml }
-    - { src: /etc/kubernetes/crds/gateway-api/gateway.networking.k8s.io_referencegrants.yaml }
-    - { src: /etc/kubernetes/crds/gateway-api/gateway.networking.k8s.io_backendtlspolicies.yaml }
-    - { src: /etc/kubernetes/crds/gateway-api/gateway.networking.k8s.io_listenersets.yaml }
-    - { src: /etc/kubernetes/crds/gateway-api/gateway.networking.k8s.io_tlsroutes.yaml }
-    - { src: /etc/kubernetes/crds/gateway-api/gateway.networking.k8s.io_vap_safeupgrades.yaml }
-  when: inventory_hostname == groups['kube_master'][0]
-  register: result
-  changed_when: result is not succeeded
-  until: result is succeeded
-  retries: 60
-
 - name: helm install
   kubernetes.core.helm:
     release_name: "{{ helm_nginx_gateway_fabric_helm_release_name }}"
@@ -118,6 +93,8 @@
     chart_ref: /etc/kubernetes/charts/nginx-gateway-fabric
     values_files: /etc/kubernetes/charts/nginx-gateway-fabric.values.yaml
     create_namespace: true
+    state: present
+    wait: true
   when: inventory_hostname == groups['kube_master'][0]
   register: result
   changed_when: result is not succeeded

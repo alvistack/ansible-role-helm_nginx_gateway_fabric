@@ -32,21 +32,36 @@ helm_nginx_gateway_fabric_helm_release_values:
   nginx:
     kind: deployment
     replicas: 1
-    patches:
-      - type: StrategicMerge
-        value:
-          spec:
-            template:
-              spec:
-                hostNetwork: true
-                dnsPolicy: ClusterFirstWithHostNet
+#    patches:
+#      - type: StrategicMerge
+#        value:
+#          spec:
+#            template:
+#              spec:
+#                hostNetwork: true
+#                dnsPolicy: ClusterFirstWithHostNet
+#                securityContext:
+#                  allowPrivilegeEscalation: true
+#                  privileged: true
+#                  sysctls: []
+#                containers:
+#                  - ports:
+#                    - containerPort: 8081
+#                      hostPort: 8081
     image:
       pullPolicy: IfNotPresent
-    container:
-      hostPorts:
-        - port: 80
-          containerPort: 80
-        - port: 443
-          containerPort: 443
+#    container:
+#      hostPorts:
+#        - port: 80
+#          containerPort: 80
+#        - port: 443
+#          containerPort: 443
     service:
       type: NodePort
+#      patches:
+#        - type: StrategicMerge
+#          value:
+#            spec:
+#              ports:
+#                - port: 8081
+#                  targetPort: 8081
