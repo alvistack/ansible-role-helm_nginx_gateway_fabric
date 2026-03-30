@@ -51,6 +51,9 @@
             namespace: nginx-gateway
           spec:
             gatewayClassName: nginx
+            allowedListeners:
+              namespaces:
+                from: All
             listeners:
               - name: http
                 protocol: HTTP
@@ -127,7 +130,7 @@
           apiVersion: gateway.networking.k8s.io/v1
           kind: HTTPRoute
           metadata:
-            name: nginx
+            name: nginx-gateway
             namespace: default
           spec:
             parentRefs:
@@ -147,87 +150,87 @@
       until: result is succeeded
       retries: 60
 
-#    - name: curl -skL
-#      ansible.builtin.shell:
-#        cmd: |
-#          set -euxo pipefail
-#          curl -skL http://localhost:80
-#      args:
-#        executable: /bin/bash
-#      when: inventory_hostname == groups['kube_master'][0]
-#      register: result
-#      changed_when: result is not succeeded
-#      until: result is succeeded
-#      retries: 60
-#
-#    - name: delete ingress
-#      vars:
-#        ansible_python_interpreter: python3
-#      kubernetes.core.k8s:
-#        state: absent
-#        wait: true
-#        definition:
-#          apiVersion: networking.k8s.io/v1
-#          kind: Ingress
-#          metadata:
-#            name: ingress-nginx
-#            namespace: default
-#      when: inventory_hostname == groups['kube_master'][0]
-#      register: result
-#      changed_when: result is not succeeded
-#      until: result is succeeded
-#      retries: 60
+    - name: curl -skL
+      ansible.builtin.shell:
+        cmd: |
+          set -euxo pipefail
+          curl -skL http://localhost:80
+      args:
+        executable: /bin/bash
+      when: inventory_hostname == groups['kube_master'][0]
+      register: result
+      changed_when: result is not succeeded
+      until: result is succeeded
+      retries: 60
 
-#    - name: delete ingress
-#      vars:
-#        ansible_python_interpreter: python3
-#      kubernetes.core.k8s:
-#        state: absent
-#        wait: true
-#        definition:
-#          apiVersion: networking.k8s.io/v1
-#          kind: Ingress
-#          metadata:
-#            name: ingress-nginx
-#            namespace: default
-#      when: inventory_hostname == groups['kube_master'][0]
-#      register: result
-#      changed_when: result is not succeeded
-#      until: result is succeeded
-#      retries: 60
-#
-#    - name: delete service
-#      vars:
-#        ansible_python_interpreter: python3
-#      kubernetes.core.k8s:
-#        state: absent
-#        wait: true
-#        definition:
-#          apiVersion: v1
-#          kind: Service
-#          metadata:
-#            name: nginx
-#            namespace: default
-#      when: inventory_hostname == groups['kube_master'][0]
-#      register: result
-#      changed_when: result is not succeeded
-#      until: result is succeeded
-#      retries: 60
-#
-#    - name: delete pod
-#      vars:
-#        ansible_python_interpreter: python3
-#      kubernetes.core.k8s:
-#        state: absent
-#        wait: true
-#        definition:
-#          apiVersion: v1
-#          kind: Pod
-#          metadata:
-#            name: nginx
-#            namespace: default
-#      when: inventory_hostname == groups['kube_master'][0]
-#      register: result
-#      changed_when: result is not succeeded
-#      until: result is succeeded
-#      retries: 60
+    - name: delete httproute
+      vars:
+        ansible_python_interpreter: python3
+      kubernetes.core.k8s:
+        state: absent
+        wait: true
+        definition:
+          apiVersion: gateway.networking.k8s.io/v1
+          kind: HTTPRoute
+          metadata:
+            name: nginx-gateway
+            namespace: default
+      when: inventory_hostname == groups['kube_master'][0]
+      register: result
+      changed_when: result is not succeeded
+      until: result is succeeded
+      retries: 60
+
+    - name: delete service
+      vars:
+        ansible_python_interpreter: python3
+      kubernetes.core.k8s:
+        state: absent
+        wait: true
+        definition:
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: nginx
+            namespace: default
+      when: inventory_hostname == groups['kube_master'][0]
+      register: result
+      changed_when: result is not succeeded
+      until: result is succeeded
+      retries: 60
+
+    - name: delete pod
+      vars:
+        ansible_python_interpreter: python3
+      kubernetes.core.k8s:
+        state: absent
+        wait: true
+        definition:
+          apiVersion: v1
+          kind: Pod
+          metadata:
+            name: nginx
+            namespace: default
+      when: inventory_hostname == groups['kube_master'][0]
+      register: result
+      changed_when: result is not succeeded
+      until: result is succeeded
+      retries: 60
+
+    - name: delete gateway
+      vars:
+        ansible_python_interpreter: python3
+      kubernetes.core.k8s:
+        state: absent
+        wait: true
+        definition:
+          apiVersion: gateway.networking.k8s.io/v1
+          kind: Gateway
+          metadata:
+            name: nginx-gateway
+            namespace: nginx-gateway
+      when: inventory_hostname == groups['kube_master'][0]
+      register: result
+      changed_when: result is not succeeded
+      until: result is succeeded
+      retries: 60
