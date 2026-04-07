@@ -40,13 +40,17 @@ helm_nginx_gateway_fabric_helm_release_values:
               spec:
                 hostNetwork: true
                 dnsPolicy: ClusterFirstWithHostNet
+                securityContext:
+                  allowPrivilegeEscalation: true
+                  privileged: true
+                  sysctls: []
+                containers:
+                  - name: nginx
+                    securityContext:
+                      allowPrivilegeEscalation: true
+                      privileged: true
+                      sysctls: []
     image:
       pullPolicy: IfNotPresent
-    container:
-      hostPorts:
-        - port: 80
-          containerPort: 80
-        - port: 443
-          containerPort: 443
     service:
       type: NodePort
