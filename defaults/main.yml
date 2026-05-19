@@ -26,6 +26,7 @@ helm_nginx_gateway_fabric_helm_release_values:
     kind: deployment
     replicas: 1
     image:
+      repository: ghcr.io/nginx/nginx-gateway-fabric
       pullPolicy: IfNotPresent
     snippets:
       enable: true
@@ -51,6 +52,7 @@ helm_nginx_gateway_fabric_helm_release_values:
                       privileged: true
                       sysctls: []
     image:
+      repository: ghcr.io/nginx/nginx-gateway-fabric/nginx
       pullPolicy: IfNotPresent
     service:
       type: NodePort

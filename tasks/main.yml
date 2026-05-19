@@ -100,3 +100,22 @@
   changed_when: result is not succeeded
   until: result is succeeded
   retries: 60
+
+- name: kubectl create GatewayClass
+  vars:
+    ansible_python_interpreter: python3
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: gateway.networking.k8s.io/v1
+      kind: GatewayClass
+      metadata:
+        name: nginx-gateway
+      spec:
+        controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  when: inventory_hostname == groups['kube_master'][0]
+  register: result
+  changed_when: result is not succeeded
+  until: result is succeeded
+  retries: 60
