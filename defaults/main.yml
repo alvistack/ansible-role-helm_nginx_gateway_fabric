@@ -33,6 +33,14 @@ helm_nginx_gateway_fabric_helm_release_values:
   nginx:
     kind: deployment
     replicas: 1
+    pod:
+      volumes:
+        - name: proxy-cache
+          emptyDir: {}
+    container:
+      volumeMounts:
+        - mountPath: /tmp/nginx/proxy-cache
+          name: proxy-cache
     patches:
       - type: StrategicMerge
         value:
@@ -56,3 +64,32 @@ helm_nginx_gateway_fabric_helm_release_values:
       pullPolicy: IfNotPresent
     service:
       type: NodePort
+  extraObjects:
+    - |
+      apiVersion: gateway.nginx.org/v1alpha1
+      kind: SnippetsPolicy
+      metadata:
+        name: global-cache
+        namespace: nginx-gateway
+      spec:
+        targetRefs:
+          - group: gateway.networking.k8s.io
+            kind: Gateway
+            name: nginx-gateway
+        snippets:
+          - context: http
+            value: |
+              proxy_cache_path /tmp/nginx/proxy-cache levels=1:2 keys_zone=cache:10m max_size=128m inactive=10m use_temp_path=off;
+              proxy_cache_key "$scheme$request_method$proxy_host$request_uri$http_origin";
+          - context: http.server.location
+            value: |
+              proxy_cache cache;
+              proxy_cache_valid 200 1s;
+              proxy_cache_lock on;
+              proxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;
+              add_header 'X-Cache-Status' $upstream_cache_status always;
+              add_header 'Access-Control-Allow-Origin' $http_origin always;
+              add_header 'Access-Control-Allow-Methods' 'GET, POST, PUT, DELETE, OPTIONS' always;
+              add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type, Accept, Origin, X-Requested-With' always;
+              add_header 'Access-Control-Allow-Credentials' 'true' always;
+              add_header 'Vary' 'Origin' always;

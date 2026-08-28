@@ -69,7 +69,7 @@
                     from: All
                 tls:
                   certificateRefs:
-                    - name: default
+                    - name: server-tls
                       kind: Secret
                       group: ""
       when: inventory_hostname == groups['kube_master'][0]
