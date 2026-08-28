@@ -35,12 +35,13 @@ helm_nginx_gateway_fabric_helm_release_values:
     replicas: 1
     pod:
       volumes:
-        - name: proxy-cache
-          emptyDir: {}
+        - name: var-cache-nginx-proxy-cache
+          emptyDir:
+            medium: Memory
     container:
       volumeMounts:
-        - mountPath: /tmp/nginx/proxy-cache
-          name: proxy-cache
+        - mountPath: /var/cache/nginx/proxy_cache
+          name: var-cache-nginx-proxy-cache
     patches:
       - type: StrategicMerge
         value:
@@ -79,13 +80,14 @@ helm_nginx_gateway_fabric_helm_release_values:
         snippets:
           - context: http
             value: |
-              proxy_cache_path /tmp/nginx/proxy-cache levels=1:2 keys_zone=cache:10m max_size=128m inactive=10m use_temp_path=off;
+              proxy_cache_path /var/cache/nginx/proxy_cache levels=1:2 keys_zone=cache:10m max_size=128m inactive=10m use_temp_path=off;
               proxy_cache_key "$scheme$request_method$proxy_host$request_uri$http_origin";
           - context: http.server.location
             value: |
               proxy_cache cache;
               proxy_cache_valid 200 1s;
               proxy_cache_lock on;
+              proxy_ignore_headers Set-Cookie Cache-Control;
               proxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;
               add_header 'X-Cache-Status' $upstream_cache_status always;
               add_header 'Access-Control-Allow-Origin' $http_origin always;
