@@ -14,6 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Mode defines how NGINX will rewrite the client’s IP address.
+helm_nginx_gateway_fabric_rewrite_client_ip_mode_type: XForwardedFor
+
+# SetIPRecursively configures whether recursive search is used when
+# selecting the client’s address from the X-Forwarded-For header
+helm_nginx_gateway_fabric_rewrite_client_ip_set_ip_recursively: true
+
+# TrustedAddresses specifies the addresses that are trusted to send
+# correct client IP information.
+helm_nginx_gateway_fabric_rewrite_client_ip_trusted_addresses:
+  - type: CIDR
+    value: 224.0.0.0/4
+  - type: CIDR
+    value: 10.0.0.0/8
+  - type: CIDR
+    value: 172.16.0.0/12
+  - type: CIDR
+    value: 192.168.0.0/16
+  - type: IPAddress
+    value: 127.0.0.1
+
 # Release name to manage.
 helm_nginx_gateway_fabric_helm_release_name: nginx-gateway-fabric
 
@@ -65,12 +86,17 @@ helm_nginx_gateway_fabric_helm_release_values:
       pullPolicy: IfNotPresent
     service:
       type: NodePort
+    config:
+      rewriteClientIP:
+        mode: "{{ helm_nginx_gateway_fabric_rewrite_client_ip_mode_type }}"
+        setIPRecursively: "{{ helm_nginx_gateway_fabric_rewrite_client_ip_set_ip_recursively | bool | lower }}"
+        trustedAddresses: "{{ helm_nginx_gateway_fabric_rewrite_client_ip_trusted_addresses }}"
   extraObjects:
     - |
       apiVersion: gateway.nginx.org/v1alpha1
       kind: SnippetsPolicy
       metadata:
-        name: global-cache
+        name: global-policy
         namespace: nginx-gateway
       spec:
         targetRefs:
@@ -80,10 +106,14 @@ helm_nginx_gateway_fabric_helm_release_values:
         snippets:
           - context: http
             value: |
+              gzip on;
+              proxy_buffering on;
               proxy_cache_path /var/cache/nginx/proxy_cache levels=1:2 keys_zone=cache:10m max_size=128m inactive=10m use_temp_path=off;
               proxy_cache_key "$scheme$request_method$proxy_host$request_uri$http_origin";
           - context: http.server.location
             value: |
+              http2 off;
+              add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
               proxy_cache cache;
               proxy_cache_valid 200 1s;
               proxy_cache_lock on;
