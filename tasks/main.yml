@@ -101,6 +101,66 @@
   until: result is succeeded
   retries: 60
 
+- name: kubectl create GatewayClass
+  vars:
+    ansible_python_interpreter: python3
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: gateway.networking.k8s.io/v1
+      kind: GatewayClass
+      metadata:
+        name: nginx-gateway
+      spec:
+        controllerName: gateway.envoyproxy.io/gatewayclass-controller
+  when: inventory_hostname == groups['kube_master'][0]
+  register: result
+  changed_when: result is not succeeded
+  until: result is succeeded
+  retries: 60
+
+- name: kubectl create Gateway
+  vars:
+    ansible_python_interpreter: python3
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: gateway.networking.k8s.io/v1
+      kind: Gateway
+      metadata:
+        name: nginx-gateway
+        namespace: "{{ helm_nginx_gateway_fabric_helm_release_namespace }}"
+      spec:
+        gatewayClassName: nginx
+        allowedListeners:
+          namespaces:
+            from: All
+        listeners:
+          - name: http
+            protocol: HTTP
+            port: 80
+            allowedRoutes:
+              namespaces:
+                from: All
+          - name: https
+            protocol: HTTPS
+            port: 443
+            allowedRoutes:
+              namespaces:
+                from: All
+            tls:
+              certificateRefs:
+                - name: server-tls
+                  kind: Secret
+                  group: ""
+  when: inventory_hostname == groups['kube_master'][0]
+  register: result
+  changed_when: result is not succeeded
+  until: result is succeeded
+  retries: 60
+
 - name: kubectl apply SnippetsPolicy
   vars:
     ansible_python_interpreter: python3
@@ -112,7 +172,7 @@
       kind: SnippetsPolicy
       metadata:
         name: global-policy
-        namespace: nginx-gateway
+        namespace: "{{ helm_nginx_gateway_fabric_helm_release_namespace }}"
       spec:
         targetRefs:
           - group: gateway.networking.k8s.io
@@ -140,25 +200,6 @@
               add_header 'Access-Control-Allow-Headers' 'Authorization, Content-Type, Accept, Origin, X-Requested-With' always;
               add_header 'Access-Control-Allow-Credentials' 'true' always;
               add_header 'Vary' 'Origin' always;
-  when: inventory_hostname == groups['kube_master'][0]
-  register: result
-  changed_when: result is not succeeded
-  until: result is succeeded
-  retries: 60
-
-- name: kubectl create GatewayClass
-  vars:
-    ansible_python_interpreter: python3
-  kubernetes.core.k8s:
-    state: present
-    wait: true
-    definition:
-      apiVersion: gateway.networking.k8s.io/v1
-      kind: GatewayClass
-      metadata:
-        name: nginx-gateway
-      spec:
-        controllerName: gateway.envoyproxy.io/gatewayclass-controller
   when: inventory_hostname == groups['kube_master'][0]
   register: result
   changed_when: result is not succeeded

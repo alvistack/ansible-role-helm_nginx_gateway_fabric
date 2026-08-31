@@ -37,47 +37,6 @@
       until: result is succeeded
       retries: 60
 
-    - name: create gateway
-      vars:
-        ansible_python_interpreter: python3
-      kubernetes.core.k8s:
-        state: present
-        wait: true
-        definition:
-          apiVersion: gateway.networking.k8s.io/v1
-          kind: Gateway
-          metadata:
-            name: nginx-gateway
-            namespace: nginx-gateway
-          spec:
-            gatewayClassName: nginx
-            allowedListeners:
-              namespaces:
-                from: All
-            listeners:
-              - name: http
-                protocol: HTTP
-                port: 80
-                allowedRoutes:
-                  namespaces:
-                    from: All
-              - name: https
-                protocol: HTTPS
-                port: 443
-                allowedRoutes:
-                  namespaces:
-                    from: All
-                tls:
-                  certificateRefs:
-                    - name: server-tls
-                      kind: Secret
-                      group: ""
-      when: inventory_hostname == groups['kube_master'][0]
-      register: result
-      changed_when: result is not succeeded
-      until: result is succeeded
-      retries: 60
-
     - name: create pod
       vars:
         ansible_python_interpreter: python3
@@ -168,7 +127,6 @@
         cmd: |
           set -euxo pipefail
           curl -skL https://{{ inventory_hostname }}
-          curl -skI https://{{ inventory_hostname }} | grep -i 'X-Cache-Status'
       args:
         executable: /bin/bash
       when: inventory_hostname == groups['kube_master'][0]
