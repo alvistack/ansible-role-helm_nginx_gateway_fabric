@@ -186,14 +186,14 @@
               proxy_cache_path /var/cache/nginx/proxy_cache levels=1:2 keys_zone=cache:10m max_size=128m inactive=1m use_temp_path=off;
               proxy_cache_key '$scheme$request_method$host$request_uri$http_origin';
               map $upstream_cache_status $cache_status_header {
-                  'HIT'         'ingress-nginx; hit';
-                  'STALE'       'ingress-nginx; hit; fwd=stale';
-                  'UPDATING'    'ingress-nginx; hit; fwd=stale';
-                  'MISS'        'ingress-nginx; fwd=miss; stored';
-                  'EXPIRED'     'ingress-nginx; fwd=stale; stored';
-                  'BYPASS'      'ingress-nginx; fwd=bypass';
-                  'REVALIDATED' 'ingress-nginx; hit; fwd=stale';
-                  default       'ingress-nginx; fwd=request';
+                  'HIT'         'nginx-gateway; hit';
+                  'STALE'       'nginx-gateway; hit; fwd=stale';
+                  'UPDATING'    'nginx-gateway; hit; fwd=stale';
+                  'MISS'        'nginx-gateway; fwd=miss; stored';
+                  'EXPIRED'     'nginx-gateway; fwd=stale; stored';
+                  'BYPASS'      'nginx-gateway; fwd=bypass';
+                  'REVALIDATED' 'nginx-gateway; hit; fwd=stale';
+                  default       'nginx-gateway; fwd=request';
               }
               map $http_origin $allow_origin {
                   "~^https?://" "$http_origin";
