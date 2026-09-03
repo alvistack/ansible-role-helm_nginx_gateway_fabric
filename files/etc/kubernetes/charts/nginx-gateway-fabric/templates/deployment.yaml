@@ -37,7 +37,7 @@ spec:
         {{- end }}
       {{- end }}
     spec:
-      automountServiceAccountToken: true
+      automountServiceAccountToken: {{ .Values.nginxGateway.serviceAccount.automountServiceAccountToken }}
       containers:
       - args:
         - controller
@@ -46,6 +46,8 @@ spec:
         - --config={{ include "nginx-gateway.config-name" . }}
         - --service={{ include "nginx-gateway.fullname" . }}
         - --agent-tls-secret={{ .Values.certGenerator.agentTLSSecretName }}
+        - --server-tls-domain={{ .Values.serverTLSDomain }}
+        - --cluster-domain={{ .Values.clusterDomain }}
         {{- if .Values.nginxGateway.watchNamespaces }}
         - --watch-namespaces={{ join "," .Values.nginxGateway.watchNamespaces }}
         {{- end }}
@@ -99,6 +101,15 @@ spec:
         {{- else }}
         - --leader-election-disable
         {{- end }}
+        {{- if .Values.nginxGateway.leaderElection.leaseDuration }}
+        - --leader-election-lease-duration={{ .Values.nginxGateway.leaderElection.leaseDuration }}
+        {{- end }}
+        {{- if .Values.nginxGateway.leaderElection.renewDeadline }}
+        - --leader-election-renew-deadline={{ .Values.nginxGateway.leaderElection.renewDeadline }}
+        {{- end }}
+        {{- if .Values.nginxGateway.leaderElection.retryPeriod }}
+        - --leader-election-retry-period={{ .Values.nginxGateway.leaderElection.retryPeriod }}
+        {{- end }}
         {{- if not .Values.nginxGateway.productTelemetry.enable }}
         - --product-telemetry-disable
         {{- end }}
@@ -118,6 +129,27 @@ spec:
         {{- if .Values.nginxGateway.snippets.enable }}
         - --snippets
         {{- end }}
+        {{- if .Values.nginxGateway.payloadProcessor.enable }}
+        - --payload-processor
+        {{- end }}
+        {{- if .Values.nginxGateway.plmStorage.url }}
+        - --plm-storage-url={{ .Values.nginxGateway.plmStorage.url }}
+        {{- if .Values.nginxGateway.plmStorage.credentialsSecretName }}
+        - --plm-storage-credentials-secret={{ .Values.nginxGateway.plmStorage.credentialsSecretName }}
+        {{- end }}
+        {{- if .Values.nginxGateway.plmStorage.tls.caSecretName }}
+        - --plm-storage-ca-secret={{ .Values.nginxGateway.plmStorage.tls.caSecretName }}
+        {{- end }}
+        {{- if .Values.nginxGateway.plmStorage.tls.clientSSLSecretName }}
+        - --plm-storage-client-ssl-secret={{ .Values.nginxGateway.plmStorage.tls.clientSSLSecretName }}
+        {{- end }}
+        {{- if .Values.nginxGateway.plmStorage.tls.insecureSkipVerify }}
+        - --plm-storage-skip-verify
+        {{- end }}
+        {{- end }}
+        {{- if .Values.nginxGateway.externalLoadBalancer.enable }}
+        - --external-load-balancer
+        {{- end }}
         {{- if .Capabilities.APIVersions.Has "security.openshift.io/v1/SecurityContextConstraints" }}
         - --nginx-scc={{ include "nginx-gateway.scc-name" . }}-nginx
         {{- end}}
@@ -131,6 +163,12 @@ spec:
           {{- end }}
           {{- if .Values.nginx.nginxOneConsole.skipVerify }}
         - --nginx-one-tls-skip-verify
+          {{- end }}
+        {{- end }}
+        {{- if .Values.nginx.nginxInstanceManager.endpointHost }}
+        - --nim-telemetry-endpoint-host={{ .Values.nginx.nginxInstanceManager.endpointHost }}
+          {{- if .Values.nginx.nginxInstanceManager.endpointPort }}
+        - --nim-telemetry-endpoint-port={{ .Values.nginx.nginxInstanceManager.endpointPort }}
           {{- end }}
         {{- end }}
         env:

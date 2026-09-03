@@ -132,6 +132,12 @@ Create namespaced RBAC rules.
 - apiGroups:
   - ""
   resources:
+  - services/status
+  verbs:
+  - patch
+- apiGroups:
+  - ""
+  resources:
   - pods
   verbs:
   - get
@@ -176,6 +182,17 @@ Create namespaced RBAC rules.
   - get
   - watch
 - apiGroups:
+  - policy
+  resources:
+  - poddisruptionbudgets
+  verbs:
+  - create
+  - update
+  - delete
+  - list
+  - get
+  - watch
+- apiGroups:
   - discovery.k8s.io
   resources:
   - endpointslices
@@ -192,10 +209,8 @@ Create namespaced RBAC rules.
   - backendtlspolicies
   - tlsroutes
   - listenersets
-  {{- if .Values.nginxGateway.gwAPIExperimentalFeatures.enable }}
   - tcproutes
   - udproutes
-  {{- end }}
   verbs:
   - list
   - watch
@@ -210,10 +225,8 @@ Create namespaced RBAC rules.
   - backendtlspolicies/status
   - tlsroutes/status
   - listenersets/status
-  {{- if .Values.nginxGateway.gwAPIExperimentalFeatures.enable }}
   - tcproutes/status
   - udproutes/status
-  {{- end }}
   verbs:
   - update
 - apiGroups:
@@ -235,6 +248,12 @@ Create namespaced RBAC rules.
   - proxysettingspolicies
   - ratelimitpolicies
   - wafpolicies
+  {{- if .Values.nginxGateway.externalLoadBalancer.enable }}
+  - externalloadbalancers
+  {{- end }}
+  {{- if .Values.nginxGateway.payloadProcessor.enable }}
+  - payloadprocessors
+  {{- end }}
   {{- if or .Values.nginxGateway.snippetsFilters.enable .Values.nginxGateway.snippets.enable }}
   - snippetsfilters
   {{- end }}
@@ -255,6 +274,12 @@ Create namespaced RBAC rules.
   - proxysettingspolicies/status
   - ratelimitpolicies/status
   - wafpolicies/status
+  {{- if .Values.nginxGateway.externalLoadBalancer.enable }}
+  - externalloadbalancers/status
+  {{- end }}
+  {{- if .Values.nginxGateway.payloadProcessor.enable }}
+  - payloadprocessors/status
+  {{- end }}
   {{- if or .Values.nginxGateway.snippetsFilters.enable .Values.nginxGateway.snippets.enable }}
   - snippetsfilters/status
   {{- end }}
@@ -279,6 +304,18 @@ Create namespaced RBAC rules.
   - inferencepools/finalizers
   verbs:
   - update
+  {{- end }}
+  {{- if .Values.nginxGateway.plmStorage.url }}
+- apiGroups:
+  - appprotect.f5.com
+  resources:
+  - appolicies
+  - aplogconfs
+  verbs:
+  - get
+  - list
+  - patch
+  - watch
   {{- end }}
   {{- if .Values.nginxGateway.leaderElection.enable }}
 - apiGroups:
@@ -362,5 +399,25 @@ Create cluster RBAC rules.
   - {{ include "nginx-gateway.scc-name" . }}-nginx
   verbs:
   - use
+  {{- end }}
+  {{- if .Values.nginxGateway.externalLoadBalancer.enable }}
+- apiGroups:
+  - cis.f5.com
+  resources:
+  - ingresslinks
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - cis.f5.com
+  resources:
+  - ingresslinks/status
+  verbs:
+  - get
   {{- end }}
 {{- end }}
