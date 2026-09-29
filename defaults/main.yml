@@ -92,3 +92,6 @@ helm_nginx_gateway_fabric_helm_release_values:
         mode: "{{ helm_nginx_gateway_fabric_rewrite_client_ip_mode_type }}"
         setIPRecursively: "{{ helm_nginx_gateway_fabric_rewrite_client_ip_set_ip_recursively }}"
         trustedAddresses: "{{ helm_nginx_gateway_fabric_rewrite_client_ip_trusted_addresses }}"
+    certGenerator:
+      enable: true
+      serverTLSSecretName: server-tls
