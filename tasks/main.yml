@@ -112,8 +112,106 @@
       kind: GatewayClass
       metadata:
         name: nginx-gateway
+        annotations:
+          gateway.networking.k8s.io/is-default-class: "true"
       spec:
-        controllerName: gateway.envoyproxy.io/gatewayclass-controller
+        controllerName: gateway.nginx.org/nginx-gateway-controller
+  when: inventory_hostname == groups['kube_master'][0]
+  register: result
+  changed_when: result is not succeeded
+  until: result is succeeded
+  retries: 60
+
+- name: kubectl create Gateway
+  vars:
+    ansible_python_interpreter: python3
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: gateway.networking.k8s.io/v1
+      kind: Gateway
+      metadata:
+        name: nginx-gateway
+        namespace: "{{ helm_nginx_gateway_fabric_helm_release_namespace }}"
+      spec:
+        gatewayClassName: nginx-gateway
+        allowedListeners:
+          namespaces:
+            from: All
+        listeners:
+          - name: http
+            protocol: HTTP
+            port: 80
+            allowedRoutes:
+              namespaces:
+                from: All
+          - name: https
+            protocol: HTTPS
+            port: 443
+            allowedRoutes:
+              namespaces:
+                from: All
+            tls:
+              certificateRefs:
+                - name: server-tls
+                  kind: Secret
+                  group: ""
+  when: inventory_hostname == groups['kube_master'][0]
+  register: result
+  changed_when: result is not succeeded
+  until: result is succeeded
+  retries: 60
+
+- name: kubectl apply SnippetsPolicy
+  vars:
+    ansible_python_interpreter: python3
+  kubernetes.core.k8s:
+    state: present
+    wait: true
+    definition:
+      apiVersion: gateway.nginx.org/v1alpha1
+      kind: SnippetsPolicy
+      metadata:
+        name: nginx-gateway
+        namespace: "{{ helm_nginx_gateway_fabric_helm_release_namespace }}"
+      spec:
+        targetRefs:
+          - group: gateway.networking.k8s.io
+            kind: Gateway
+            name: nginx-gateway
+        snippets:
+          - context: http
+            value: |
+              gzip on;
+              proxy_buffering on;
+              proxy_cache_path /var/cache/nginx/proxy_cache levels=1:2 keys_zone=cache:10m max_size=128m inactive=1m use_temp_path=off;
+              proxy_cache_key '$scheme$request_method$host$request_uri$http_origin';
+              map $upstream_cache_status $cache_status_header {
+                  'HIT'         'nginx-gateway; hit';
+                  'STALE'       'nginx-gateway; hit; fwd=stale';
+                  'UPDATING'    'nginx-gateway; hit; fwd=stale';
+                  'MISS'        'nginx-gateway; fwd=miss; stored';
+                  'EXPIRED'     'nginx-gateway; fwd=stale; stored';
+                  'BYPASS'      'nginx-gateway; fwd=bypass';
+                  'REVALIDATED' 'nginx-gateway; hit; fwd=stale';
+                  default       'nginx-gateway; fwd=request';
+              }
+          - context: http.server.location
+            value: |
+              proxy_cache cache;
+              proxy_cache_valid 200 1s;
+              proxy_cache_use_stale updating error timeout http_500 http_502 http_503 http_504;
+              proxy_cache_background_update on;
+              proxy_cache_lock on;
+              proxy_cache_bypass $http_cookie;
+              proxy_no_cache $http_cookie;
+              add_header 'Strict-Transport-Security' 'max-age=31536000; includeSubDomains' always;
+              add_header 'Cache-Status' '$cache_status_header' always;
+              add_header 'Cache-Control' 'public, max-age=1, stale-while-revalidate=59' always;
+              add_header 'CDN-Cache-Control' 'public, max-age=1, stale-while-revalidate=59' always;
+              add_header 'Vary' 'Accept-Encoding, Origin' always;
+              add_header Content-Security-Policy "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob:; frame-ancestors 'self';" always;
   when: inventory_hostname == groups['kube_master'][0]
   register: result
   changed_when: result is not succeeded
