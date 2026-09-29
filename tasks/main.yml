@@ -113,7 +113,7 @@
       metadata:
         name: nginx-gateway
       spec:
-        controllerName: gateway.envoyproxy.io/gatewayclass-controller
+        controllerName: gateway.nginx.org/nginx-gateway-fabric-controller
   when: inventory_hostname == groups['kube_master'][0]
   register: result
   changed_when: result is not succeeded
@@ -133,7 +133,7 @@
         name: nginx-gateway
         namespace: "{{ helm_nginx_gateway_fabric_helm_release_namespace }}"
       spec:
-        gatewayClassName: nginx
+        gatewayClassName: nginx-gateway
         allowedListeners:
           namespaces:
             from: All
