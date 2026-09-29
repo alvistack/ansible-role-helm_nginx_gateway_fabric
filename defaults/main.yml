@@ -51,6 +51,8 @@ helm_nginx_gateway_fabric_helm_release_values:
       pullPolicy: IfNotPresent
     snippets:
       enable: true
+    gatewayClassName: nginx-gateway
+    gatewayControllerName: gateway.nginx.org/nginx-gateway-controller
   nginx:
     kind: deployment
     replicas: 1

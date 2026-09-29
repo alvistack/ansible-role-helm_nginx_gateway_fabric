@@ -115,7 +115,7 @@
         annotations:
           gateway.networking.k8s.io/is-default-class: "true"
       spec:
-        controllerName: gateway.nginx.org/nginx-gateway-fabric-controller
+        controllerName: gateway.nginx.org/nginx-gateway-controller
   when: inventory_hostname == groups['kube_master'][0]
   register: result
   changed_when: result is not succeeded
