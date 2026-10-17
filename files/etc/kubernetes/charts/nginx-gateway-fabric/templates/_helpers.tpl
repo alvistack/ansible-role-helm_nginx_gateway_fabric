@@ -193,6 +193,17 @@ Create namespaced RBAC rules.
   - get
   - watch
 - apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - servicemonitors
+  verbs:
+  - create
+  - update
+  - delete
+  - list
+  - get
+  - watch
+- apiGroups:
   - discovery.k8s.io
   resources:
   - endpointslices
@@ -246,6 +257,7 @@ Create namespaced RBAC rules.
   - upstreamsettingspolicies
   - authenticationfilters
   - proxysettingspolicies
+  - accesspolicies
   - ratelimitpolicies
   - wafpolicies
   {{- if .Values.nginxGateway.externalLoadBalancer.enable }}
@@ -272,6 +284,7 @@ Create namespaced RBAC rules.
   - upstreamsettingspolicies/status
   - authenticationfilters/status
   - proxysettingspolicies/status
+  - accesspolicies/status
   - ratelimitpolicies/status
   - wafpolicies/status
   {{- if .Values.nginxGateway.externalLoadBalancer.enable }}
