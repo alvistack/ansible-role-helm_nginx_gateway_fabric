@@ -25,15 +25,15 @@ helm_nginx_gateway_fabric_rewrite_client_ip_set_ip_recursively: true
 # correct client IP information.
 helm_nginx_gateway_fabric_rewrite_client_ip_trusted_addresses:
   - type: CIDR
-    value: 224.0.0.0/4
+    value: "224.0.0.0/4"
   - type: CIDR
-    value: 10.0.0.0/8
+    value: "10.0.0.0/8"
   - type: CIDR
-    value: 172.16.0.0/12
+    value: "172.16.0.0/12"
   - type: CIDR
-    value: 192.168.0.0/16
+    value: "192.168.0.0/16"
   - type: IPAddress
-    value: 127.0.0.1
+    value: "127.0.0.1"
 
 # Release name to manage.
 helm_nginx_gateway_fabric_helm_release_name: nginx-gateway-fabric
